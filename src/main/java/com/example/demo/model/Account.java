@@ -39,14 +39,11 @@ public class Account {
     @Version
     private Long version;
 
-
     protected Account() {}
 
     private Account(BigDecimal balance, Customer customer) {
-
         this.balance = balance;
         this.customer = customer;
-
     }
 
     public static Account open (BigDecimal balance, Customer customer) {
@@ -56,13 +53,10 @@ public class Account {
 
   @PrePersist
     public void prePersist() {
-
         if(createdAt == null) {
             createdAt = Instant.now();
         }
-
   }
-    // --- Domain davranışları ---
 
     public void paraYatirma(BigDecimal amount) {
         requirePositive(amount);
@@ -75,18 +69,12 @@ public class Account {
         requireOpen();
         ThrowExceptionHandler.throwIf(balance.compareTo(amount) < 0 ,
                 NotEnoughBalanceException::new);
-
         balance = balance.subtract(amount);
     }
 
     public void close () {
-
-        
-
-        if(status == AccountStatus.CLOSED) throw new AccountClosedException();
-        if(balance.compareTo(BigDecimal.ZERO) != 0) {
-            throw new BalanceNotZeroException(balance);
-        }
+        ThrowExceptionHandler.throwIf(status == AccountStatus.CLOSED , AccountClosedException::new);
+        ThrowExceptionHandler.throwIf(balance.compareTo(BigDecimal.ZERO) != 0 , () -> new BalanceNotZeroException(balance));
 
         status = AccountStatus.CLOSED;
         closedAt = Instant.now();
@@ -96,13 +84,10 @@ public class Account {
     private void requireOpen() {
         ThrowExceptionHandler.throwIf(status != AccountStatus.OPEN ,
                 AccountClosedException::new);
-
     }
     private static void requirePositive(BigDecimal a) {
-
         ThrowExceptionHandler.throwIf((a == null || a.signum() <= 0) ,
                 NotEnoughBalanceException::new);
-
     }
 
     public Long getId() {return id;}
@@ -111,6 +96,5 @@ public class Account {
     public Customer getCustomer() {return customer;}
     public AccountStatus getStatus() {return status;}
     public Set<Transaction> getTransactions() {return transactions;}
-
 
 }

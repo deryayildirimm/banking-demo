@@ -22,12 +22,6 @@ import java.util.Optional;
 @Service
 public class TransactionService {
 
-    /*
-    * deposit -> para yatırma
-    * withdraw -> para çekme
-    * para transfer işlemi
-     */
-
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
 
@@ -37,50 +31,32 @@ public class TransactionService {
         this.accountRepository = accountRepository;
     }
 
-    // para yatırma
     @Transactional
     public TransactionResponse paraYatirmaIslemi(Long accountId, BigDecimal amount, String desc) {
-        Account account = accountRepository.lockByIdForUpdate(accountId).orElseThrow(() -> new AccountNotFoundException(accountId));
+        Account account = getAccountForUpdate(accountId);
         account.paraYatirma(amount);
         Transaction transaction = Transaction.paraYatirma(account, amount, desc);
-       Transaction newTransaction =  transactionRepository.save(transaction);
 
-       return new TransactionResponse(
-               newTransaction.getId(),
-               newTransaction.getAccount().getId(),
-               newTransaction.getTransactionType(),
-               newTransaction.getAmount(),
-               newTransaction.getCreatedTime(),
-               newTransaction.getAccount().getBalance(),
-               newTransaction.getDescription()
-       );
-
+       return  buildTransactionResponse(transactionRepository.save(transaction));
     }
+
     @Transactional
     public TransactionResponse paraCekmeIslemi(Long accountId, BigDecimal amount, String desc) {
-        Account account = accountRepository.lockByIdForUpdate(accountId).orElseThrow(() -> new AccountNotFoundException(accountId));
+        Account account = getAccountForUpdate(accountId);
         account.paraCekme(amount);
         Transaction transaction = Transaction.paraCekme(account, amount, desc);
-        Transaction newTransaction =  transactionRepository.save(transaction);
-        return new TransactionResponse(
-                newTransaction.getId(),
-                newTransaction.getAccount().getId(),
-                newTransaction.getTransactionType(),
-                newTransaction.getAmount(),
-                newTransaction.getCreatedTime(),
-                newTransaction.getAccount().getBalance(),
-                newTransaction.getDescription()
-        );
 
+        return buildTransactionResponse(transactionRepository.save(transaction));
     }
+
     @Transactional
     public TransferResponse transferIslemi(TransferRequest transferRequest) {
 
         ThrowExceptionHandler.throwIf(transferRequest.fromAccountId().equals(transferRequest.toAccountId()) ,
                 () -> new SameAccountTransferException(transferRequest.toAccountId()));
 
-        Account from = accountRepository.lockByIdForUpdate(transferRequest.fromAccountId()).orElseThrow(() -> new AccountNotFoundException(transferRequest.fromAccountId()));
-        Account to = accountRepository.lockByIdForUpdate(transferRequest.toAccountId()).orElseThrow(() -> new AccountNotFoundException(transferRequest.toAccountId()));
+        Account from = getAccountForUpdate(transferRequest.fromAccountId());
+        Account to = getAccountForUpdate(transferRequest.toAccountId());
 
         from.paraCekme(transferRequest.amount());
         to.paraYatirma(transferRequest.amount());
@@ -88,30 +64,12 @@ public class TransactionService {
         Transaction transactionIn = Transaction.transferGelen(from, transferRequest.amount(), transferRequest.description());
         Transaction transactionOut = Transaction.transferGelen(to, transferRequest.amount(), transferRequest.description());
 
-        transactionRepository.save(transactionIn); transactionRepository.save(transactionOut);
-
-        TransactionResponse trxInResponse = new TransactionResponse(
-                transactionIn.getId(),
-                transactionIn.getAccount().getId(),
-                transactionIn.getTransactionType(),
-                transactionIn.getAmount(),
-                transactionIn.getCreatedTime(),
-                transactionIn.getAccount().getBalance(),
-                transactionIn.getDescription()
-        );
-        TransactionResponse trxOnResponse = new TransactionResponse(
-                transactionOut.getId(),
-                transactionOut.getAccount().getId(),
-                transactionOut.getTransactionType(),
-                transactionOut.getAmount(),
-                transactionOut.getCreatedTime(),
-                transactionOut.getAccount().getBalance(),
-                transactionOut.getDescription()
-        );
+        transactionRepository.save(transactionIn);
+        transactionRepository.save(transactionOut);
 
         return new TransferResponse(
-                trxInResponse,
-                trxOnResponse
+                buildTransactionResponse(transactionOut),
+                buildTransactionResponse(transactionIn)
         );
     }
 
@@ -123,7 +81,6 @@ public class TransactionService {
                         transaction.getAmount(),
                         transaction.getCreatedTime().toString())
                 ).toList();
-
     }
 
     public long totalTransactionForAccount(Long accountId) {
@@ -134,5 +91,20 @@ public class TransactionService {
             return transactionRepository.findFirstByAccount_IdOrderByCreatedTimeDesc(accountId);
     }
 
+    private Account getAccountForUpdate(Long accountId) {
+        return accountRepository.lockByIdForUpdate(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
+    }
 
+    private TransactionResponse buildTransactionResponse(Transaction trx) {
+        return new TransactionResponse(
+                trx.getId(),
+                trx.getAccount().getId(),
+                trx.getTransactionType(),
+                trx.getAmount(),
+                trx.getCreatedTime(),
+                trx.getAccount().getBalance(),
+                trx.getDescription()
+        );
+    }
 }
