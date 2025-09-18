@@ -20,12 +20,38 @@ Java 21 ve Spring Boot 3 ile geliştirilmiş olup, **unit test coverage**'ı yü
 
 ## ⚙️ Kullanılan Teknolojiler
 
-- **Java 21**
-- **Spring Boot 3**
-- **Spring Data JPA**
-- **JUnit 5, Mockito**
+- Java 21
+- Spring Boot 3
+- Spring Data JPA
+- PostgreSQL
+- RabbitMQ
+- Docker & Docker Compose
+- Swagger (OpenAPI)
+- JUnit & Mockito 
+---
+## ⚙️ Konfigürasyon
+
+Projede güvenlik nedeniyle `application.properties` dosyası repoya dahil edilmemiştir.
+
+Projeyi çalıştırmadan önce:
+
+1. `src/main/resources/application-example.properties` dosyasını kopyalayın.
+2. Aynı klasöre `application.properties` adıyla kaydedin.
+3. İçindeki veritabanı ve RabbitMQ bilgilerini kendi ortamınıza göre düzenleyin.
+
+Örnek:
+
+```properties
+spring.datasource.url=jdbc:postgresql://postgres:5432/my-database
+spring.datasource.username=my-user
+spring.datasource.password=passw
+spring.rabbitmq.host=rabbitmq
+spring.rabbitmq.port=5672
+
+```
 
 ---
+
 
 ## ▶️ Çalıştırma
 
@@ -35,3 +61,6 @@ Projeyi local’de çalıştırmak için:
 git clone https://github.com/deryayildirimm/banking-demo.git
 cd banking-demo 
 ./mvnw spring-boot:run
+
+```
+
