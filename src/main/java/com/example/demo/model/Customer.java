@@ -1,5 +1,8 @@
 package com.example.demo.model;
 
+import com.example.demo.common.ErrorMessages;
+import com.example.demo.exception.CustomerAlreadyDeletedException;
+import com.example.demo.exception.ThrowExceptionHandler;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -33,11 +36,15 @@ public class Customer {
         this.email = email;
     }
 
+    public static Customer of(String name, String address, String phone, String email) {
+        return new Customer(name, address, phone, email);
+    }
 
     public void softDelete(){
-        if(deleted) return;
+        ThrowExceptionHandler.throwIf(deleted, CustomerAlreadyDeletedException::new);
+
         deletedAt = Instant.now();
-        deleted = !deleted;
+        deleted = true;
         deleteReason = "Deleted" ;
     }
 
@@ -46,6 +53,8 @@ public class Customer {
     public String getAddress() {return address;}
     public String getPhone() {return phone;}
     public String getEmail() {return email;}
+    public boolean isDeleted() {return deleted;}
+    public Instant getDeletedAt() {return deletedAt;}
     public Set<Account> getAccountSet() {return accountSet;}
 
 

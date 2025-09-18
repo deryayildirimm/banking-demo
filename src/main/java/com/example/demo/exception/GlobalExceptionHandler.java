@@ -53,6 +53,11 @@ public class GlobalExceptionHandler {
         return err(HttpStatus.BAD_REQUEST , ex.getMessage(), req);
     }
 
+    @ExceptionHandler(CustomerAlreadyDeletedException.class)
+    public ResponseEntity<ApiError> handleCustomerAlreadyDeleted(CustomerAlreadyDeletedException ex, HttpServletRequest req){
+        return err(HttpStatus.BAD_REQUEST , ex.getMessage(), req);
+    }
+
     @ExceptionHandler(CustomerHasActiveBalanceException.class)
     public ResponseEntity<ApiError> handleCustomerHasActiveBalanceException(CustomerHasActiveBalanceException ex,
                                                                             HttpServletRequest req){

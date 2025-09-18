@@ -52,13 +52,10 @@ public class AccountServiceTest {
 
     @Test
     void shouldReturnAccountResponse_whenCustomerExistsAndBalancePositive(){
-        //  her sey dogru gıdıp save etmelı
-        // account response donmelı
-        //
+
         long customerId = 11L;
         var req = new AccountRequest(new BigDecimal("100.0") , customerId);
 
-        // customer var
         Customer customer = mock(Customer.class);
         when(customer.getId()).thenReturn(customerId);
         when(customer.getName()).thenReturn("John Doe");
@@ -67,7 +64,6 @@ public class AccountServiceTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        // account repoya save edılıyo
         Account saved = mock(Account.class);
         when(saved.getId()).thenReturn(100L);
         when(saved.getBalance()).thenReturn(new BigDecimal("100.00"));
@@ -75,7 +71,6 @@ public class AccountServiceTest {
         when(saved.getCreatedAt()).thenReturn(Instant.parse("2025-01-01T00:00:00Z"));
         when(accountRepository.save(any(Account.class))).thenReturn(saved);
 
-        // test ettıgım kısım action
         AccountResponse response = accountService.createAccount(req);
 
         assertEquals(100L, response.id());
@@ -105,9 +100,8 @@ public class AccountServiceTest {
     }
 
     @Test
-    void shoudlThrownAnException_whenBalanceNegative(){
-        // customer ım var donuyor garantiledim
-        // ama balance negative ve cidden enetity de bu hata bana service e gelıyor mu
+    void shouldThrownAnException_whenBalanceNegative(){
+
         long customerId = 11L;
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(mock(Customer.class)));
@@ -226,7 +220,6 @@ public class AccountServiceTest {
 
     }
 
-
     // ---------------------------
     // deleteAccount(Long id)  (soft delete)
     // ---------------------------
@@ -243,7 +236,6 @@ public class AccountServiceTest {
        when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
 
        accountService.deleteAccount(accountId);
-
 
        verify(account).close();
        verify(accountRepository, times(1)).save(account);
@@ -264,8 +256,6 @@ public class AccountServiceTest {
 
         verify(account,never()).close();
         verify(accountRepository,never()).save(account);
-
-
     }
 
     @Test
@@ -320,7 +310,6 @@ public class AccountServiceTest {
         inOrder.verify(account).close();
         inOrder.verify(accountRepository).save(account);
         verifyNoInteractions(transactionService);
-
         verifyNoMoreInteractions(accountRepository , account);
 
     }
@@ -330,7 +319,6 @@ public class AccountServiceTest {
 
         Pageable pageable = PageRequest.of(0, 2);
 
-        // Account + Customer mockları
         Customer c1 = mock(Customer.class);
         when(c1.getId()).thenReturn(101L);
         when(c1.getName()).thenReturn("Ada");
@@ -408,7 +396,6 @@ public class AccountServiceTest {
     void shouldReturnCount_whenAccountExists(){
 
         Long customerId = 18L;
-
         when(accountRepository.countAccountByCustomer_Id(customerId)).thenReturn(3L);
 
         Long numberAccounts = accountService.accountNumberForCustomer(customerId);
@@ -425,7 +412,6 @@ public class AccountServiceTest {
         when(accountRepository.countAccountByCustomer_Id(customerId)).thenThrow(new RuntimeException());
 
         assertThrows(RuntimeException.class, () -> accountService.accountNumberForCustomer(customerId));
-
         verify(accountRepository).countAccountByCustomer_Id(customerId);
 
     }
@@ -479,7 +465,6 @@ public class AccountServiceTest {
 
         verify(accountRepository).findAccountsByCustomer_Id(customerId, pageable);
         verifyNoMoreInteractions(accountRepository);
-
 
     }
 

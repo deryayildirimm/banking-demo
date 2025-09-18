@@ -3,7 +3,11 @@ package com.example.demo.service;
 import com.example.demo.dto.AccountBrief;
 import com.example.demo.dto.CustomerBrief;
 import com.example.demo.dto.CustomerResponse;
+import com.example.demo.exception.CustomerAlreadyDeletedException;
+import com.example.demo.exception.CustomerHasActiveBalanceException;
 import com.example.demo.exception.CustomerNotFoundException;
+import com.example.demo.model.Account;
+import com.example.demo.model.AccountStatus;
 import com.example.demo.model.Customer;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.CustomerRepository;
@@ -87,7 +91,6 @@ public class CustomerServiceTest {
         when(accountService.accountNumberForCustomer(customerId)).thenThrow(RuntimeException.class);
 
         assertThrows(RuntimeException.class, () -> customerService.getCustomerDetails(customerId));
-
         verify(customerRepository, times(1)).findById(customerId);
 
     }
@@ -225,7 +228,77 @@ public class CustomerServiceTest {
         verifyNoInteractions(customerRepository);
     }
 
+    @Test
+    void shouldSoftDeleteAndSave_whenAccountsBalanceZeroAndHasCustomer(){
 
+        long customerId = 11L;
+        Customer customer =Customer.of("Ali", "Adres", "0555", "ali@example.com");
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(accountRepository.existsByCustomer_IdAndBalanceNot(customerId, BigDecimal.ZERO)).thenReturn(Boolean.FALSE);
+
+        Account mockAccount = mock(Account.class);
+        when(mockAccount.getId()).thenReturn(10L);
+        when(accountRepository.findAllByCustomer_IdAndStatus(customerId, AccountStatus.OPEN))
+                .thenReturn(List.of(mockAccount));
+
+        customerService.deleteCustomer(customerId);
+        verify(customerRepository).save(customer);
+        verify(accountService).deleteAccount(mockAccount.getId());
+
+        assertTrue(customer.isDeleted());
+
+    }
+
+    @Test
+    void shouldThrownAnError_whenHasCustomerAndHaveBalanceMoreThanZero(){
+        long customerId = 11L;
+
+        Customer customer = Customer.of("Ali", "Adres", "0555", "ali@example.com");
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+
+        /*
+        SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+        FROM account a
+        WHERE a.customer_id = :customerId
+        AND a.balance <> 0
+        * Belirtilen customerId’ye ait balance’ı sıfırdan farklı (<> 0) olan en az bir hesap var mı?
+        * Varsa -> true   Yoksa  -> false
+         */
+        when(accountRepository.existsByCustomer_IdAndBalanceNot(customerId, BigDecimal.ZERO)).thenReturn(Boolean.TRUE);
+
+        assertThrows(CustomerHasActiveBalanceException.class, () -> customerService.deleteCustomer(customerId));
+
+        verify(customerRepository, never()).save(any());
+        verify(accountService, never()).deleteAccount(any());
+
+    }
+
+    @Test
+    void shouldThrowAnError_whenCustomerNotFoundAndAccountsBalanceZero(){
+
+        Long customerId = 11L;
+        when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
+
+        assertThrows(CustomerNotFoundException.class, () -> customerService.deleteCustomer(customerId));
+
+        verify(customerRepository, never()).save(any());
+        verify(accountService, never()).deleteAccount(any());
+    }
+
+    @Test
+    void shouldThrownAnError_whenCustomerAlreadyDeletedAndAccountsBalanceZero(){
+
+        long customerId = 18L;
+        Customer customer = Customer.of("Ali", "Adres", "0555", "ali@example.com");
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+
+        customer.softDelete();
+        when(accountRepository.existsByCustomer_IdAndBalanceNot(customerId, BigDecimal.ZERO)).thenReturn(Boolean.FALSE);
+
+        assertThrows(CustomerAlreadyDeletedException.class, () -> customerService.deleteCustomer(customerId));
+
+    }
 
 
 

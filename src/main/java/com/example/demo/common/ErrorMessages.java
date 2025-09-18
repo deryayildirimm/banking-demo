@@ -15,5 +15,6 @@ public class ErrorMessages {
     public static final String AMOUNT_CANNOT_BE_NEGATIVE = "Amount cannot be negative";
     public static final String BALANCE_NOT_ZERO = "Balance must be zero if you want to close this account";
     public static final String ACCOUNT_ALREADY_CLOSED = "Account already closed";
+    public static final String CUSTOMER_HAS_BEEN_DELETED = "Customer has been deleted";
 
 }

@@ -19,12 +19,6 @@ import java.math.BigDecimal;
 
 @Service
 public class CustomerService {
-    /*
-    * tum customerların gelmesi
-    * customer ı silme işlemi
-    * customer ın account bilgilerinin gelmesi
-    * customer detay bılgısı
-     */
 
     private final CustomerRepository customerRepository;
     private final AccountService accountService;
@@ -42,7 +36,6 @@ public class CustomerService {
    public void deleteCustomer(Long id ) {
 
         Customer customer = findByCustomerId(id);
-
         ThrowExceptionHandler.throwIf(accountRepository.existsByCustomer_IdAndBalanceNot(id, BigDecimal.ZERO),
                 () -> new CustomerHasActiveBalanceException(id));
 
@@ -63,7 +56,6 @@ public class CustomerService {
 
         return toCustomerResponse(customer, totalAccount);
    }
-
 
    public Page<CustomerResponse> getAllCustomers(Pageable pageable) {
 
