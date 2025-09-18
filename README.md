@@ -60,7 +60,7 @@ Projeyi local’de çalıştırmak için:
 ```bash
 git clone https://github.com/deryayildirimm/banking-demo.git
 cd banking-demo 
-./mvnw spring-boot:run
+docker-compose up --build
 
 ```
 
