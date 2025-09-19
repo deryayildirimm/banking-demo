@@ -14,7 +14,7 @@ Java 21 ve Spring Boot 3 ile geliştirilmiş olup, **unit test coverage**'ı yü
 - **Account**: Hesap açma, bakiye kontrolü.
 - **Transaction**: Para yatırma, para çekme, hesaplar arası transfer.
 - **Exception Handling**: Özel exception sınıfları ile hataların yönetimi.
-- **Unit Tests**: Servis katmanı için kapsamlı testler yazıldı.
+- **Unit Tests**: Servis katmanı için kapsamlı testler 
 
 ---
 
